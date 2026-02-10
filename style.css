@@ -45,6 +45,17 @@ body {
   display: none;
 }
 
+.tap-to-start {
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 25;
+}
+
+.tap-to-start .panel {
+  font-size: 18px;
+  padding: 16px 24px;
+}
+
 .panel {
   padding: 10px 14px;
   border-radius: 8px;

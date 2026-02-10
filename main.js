@@ -3,14 +3,26 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MindARThree } from "mindar-image-three";
 
 const loadingOverlay = document.getElementById("loading");
+const tapToStartOverlay = document.getElementById("tapToStart");
+
+const isIOS =
+  /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 const loadGltf = (loader, path) =>
   new Promise((resolve, reject) => {
     loader.load(path, resolve, undefined, reject);
   });
 
-(async () => {
+let arStarted = false;
+async function startAR() {
+  if (arStarted) return;
+  arStarted = true;
+
   try {
+    tapToStartOverlay.classList.add("hidden");
+    loadingOverlay.classList.remove("hidden");
+
     const container = document.getElementById("container");
     const mindarThree = new MindARThree({
       container,
@@ -41,13 +53,15 @@ const loadGltf = (loader, path) =>
       mindarThree.start(),
     ]);
 
-    // Ensure camera video plays on iOS (black screen fix)
+    // iOS: video must play inside the same user gesture that started AR
     const video = container.querySelector("video");
     if (video) {
       video.setAttribute("playsinline", "true");
       video.setAttribute("webkit-playsinline", "true");
       video.muted = true;
-      video.play().catch(() => {});
+      video.playsInline = true;
+      const playPromise = video.play();
+      if (playPromise !== undefined) playPromise.catch(() => {});
     }
 
     const model = gltf.scene;
@@ -62,8 +76,26 @@ const loadGltf = (loader, path) =>
     });
   } catch (error) {
     console.error("AR start failed:", error);
+    arStarted = false;
     loadingOverlay.classList.add("hidden");
+    tapToStartOverlay.classList.remove("hidden");
     const reason = error?.message || String(error);
     alert("Failed to start AR.\n\n" + reason);
   }
-})();
+}
+
+if (isIOS) {
+  loadingOverlay.classList.add("hidden");
+  tapToStartOverlay.classList.remove("hidden");
+  tapToStartOverlay.addEventListener("click", startAR, { once: true });
+  tapToStartOverlay.addEventListener(
+    "touchend",
+    (e) => {
+      e.preventDefault();
+      startAR();
+    },
+    { once: true, passive: false }
+  );
+} else {
+  startAR();
+}
