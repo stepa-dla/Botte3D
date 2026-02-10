@@ -66,7 +66,7 @@ async function startAR() {
 
     const model = gltf.scene;
     const wrapper = new THREE.Group();
-    wrapper.scale.set(0.8, 0.8, 0.8);
+    wrapper.scale.set(0.5, 0.5, 0.5);
     wrapper.add(model);
     anchor.group.add(wrapper);
 
