@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { MindARThree } from "mindar-image-three";
 
 const loadingOverlay = document.getElementById("loading");
@@ -30,12 +29,7 @@ const loadGltf = (loader, path) =>
     dirLight.position.set(0.5, 1, 0.5);
     scene.add(dirLight);
 
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath(
-      "https://www.gstatic.com/draco/versioned/decoders/1.5.7/"
-    );
     const loader = new GLTFLoader();
-    loader.setDRACOLoader(dracoLoader);
 
     // Start camera and load model in parallel so AR starts fast
     const [gltf] = await Promise.all([
