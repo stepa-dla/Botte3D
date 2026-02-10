@@ -11,8 +11,9 @@ const loadGltf = (loader, path) =>
 
 (async () => {
   try {
+    const container = document.getElementById("container");
     const mindarThree = new MindARThree({
-      container: document.body,
+      container,
       imageTargetSrc: "./assets/targets.mind",
       uiLoading: "no",
       uiScanning: "no",
@@ -21,6 +22,9 @@ const loadGltf = (loader, path) =>
     });
 
     const { renderer, scene, camera } = mindarThree;
+    // Transparent clear so camera feed (video layer) shows through on mobile
+    renderer.setClearColor(0x000000, 0);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 2, 2));
     const anchor = mindarThree.addAnchor(0);
 
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.2);
@@ -36,6 +40,15 @@ const loadGltf = (loader, path) =>
       loadGltf(loader, "./assets/model.glb"),
       mindarThree.start(),
     ]);
+
+    // Ensure camera video plays on iOS (black screen fix)
+    const video = container.querySelector("video");
+    if (video) {
+      video.setAttribute("playsinline", "true");
+      video.setAttribute("webkit-playsinline", "true");
+      video.muted = true;
+      video.play().catch(() => {});
+    }
 
     const model = gltf.scene;
     model.scale.set(0.2, 0.2, 0.2);
