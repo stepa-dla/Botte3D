@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Compile MindAR Target</title>
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; background: #111; color: #eee; }
+      h1 { font-size: 1.4rem; }
+      img { max-width: 300px; border: 1px solid #444; margin: 12px 0; }
+      button { padding: 10px 20px; font-size: 1rem; cursor: pointer; border: none; border-radius: 6px; margin: 8px 4px 8px 0; }
+      #compileBtn { background: #0af; color: #000; }
+      #downloadBtn { background: #0c6; color: #000; display: none; }
+      #status { margin: 16px 0; white-space: pre-wrap; color: #aaa; }
+    </style>
+  </head>
+  <body>
+    <h1>MindAR Target Compiler</h1>
+    <p>This page compiles <code>assets/qr-target.png</code> into a <code>targets.mind</code> file using the <strong>official MindAR compiler</strong>.</p>
+    <img id="preview" src="./assets/qr-target.png" alt="QR target" />
+    <br />
+    <button id="compileBtn">Compile targets.mind</button>
+    <button id="downloadBtn">Download targets.mind</button>
+    <div id="status">Ready.</div>
+
+    <script type="module">
+      import { MindARImageCompiler } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-compiler.prod.js";
+
+      const status = document.getElementById("status");
+      const compileBtn = document.getElementById("compileBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      let compiledBlob = null;
+
+      const loadImage = (src) =>
+        new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = src;
+        });
+
+      const imageToCanvas = (img) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        return canvas;
+      };
+
+      compileBtn.addEventListener("click", async () => {
+        try {
+          compileBtn.disabled = true;
+          status.textContent = "Loading image...";
+
+          const img = await loadImage("./assets/qr-target.png");
+          const canvas = imageToCanvas(img);
+
+          status.textContent = `Image loaded (${img.naturalWidth}x${img.naturalHeight}). Compiling...`;
+
+          const compiler = new MindARImageCompiler();
+          const dataList = await compiler.compileImageTargets([canvas], (progress) => {
+            status.textContent = `Compiling... ${Math.round(progress)}%`;
+          });
+
+          const exportedBuffer = await compiler.exportData();
+          compiledBlob = new Blob([exportedBuffer]);
+
+          status.textContent = `Done! targets.mind ready (${(compiledBlob.size / 1024).toFixed(1)} KB).\nClick "Download targets.mind" and save it into the assets/ folder,\nthen replace the old targets.mind file.`;
+          downloadBtn.style.display = "inline-block";
+        } catch (err) {
+          status.textContent = "Error: " + (err.message || err);
+          console.error(err);
+        } finally {
+          compileBtn.disabled = false;
+        }
+      });
+
+      downloadBtn.addEventListener("click", () => {
+        if (!compiledBlob) return;
+        const url = URL.createObjectURL(compiledBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "targets.mind";
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    </script>
+  </body>
+</html>

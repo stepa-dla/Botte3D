@@ -1,18 +1,13 @@
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { MindARThree } from "mindar-image-three";
+
 const loadingOverlay = document.getElementById("loading");
 const scanningOverlay = document.getElementById("scanning");
 const startButton = document.getElementById("startButton");
 
 let started = false;
-
-const resolveAssetUrl = (relativePath) =>
-  new URL(relativePath, window.location.href).toString();
-
-const ensureAssetReachable = async (url, label) => {
-  const response = await fetch(url, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`${label} not found (${response.status}) at ${url}`);
-  }
-};
 
 const loadGltf = (loader, path) =>
   new Promise((resolve, reject) => {
@@ -20,32 +15,25 @@ const loadGltf = (loader, path) =>
   });
 
 const startAr = async () => {
-  if (started) {
-    return;
-  }
+  if (started) return;
   started = true;
   startButton.disabled = true;
   startButton.textContent = "Starting...";
 
   try {
-    const targetsUrl = resolveAssetUrl("./assets/targets.mind");
-    const modelUrl = resolveAssetUrl("./assets/model.glb");
-
-    await ensureAssetReachable(targetsUrl, "targets.mind");
-    await ensureAssetReachable(modelUrl, "model.glb");
-
-    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+    const mindarThree = new MindARThree({
       container: document.body,
-      imageTargetSrc: targetsUrl,
+      imageTargetSrc: "./assets/targets.mind",
       uiLoading: "#loading",
       uiScanning: "#scanning",
       uiError: "no",
-      maxTrack: 1
+      maxTrack: 1,
     });
 
     const { renderer, scene, camera } = mindarThree;
     const anchor = mindarThree.addAnchor(0);
 
+    // Lighting
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.2);
     scene.add(hemiLight);
 
@@ -53,13 +41,17 @@ const startAr = async () => {
     dirLight.position.set(0.5, 1, 0.5);
     scene.add(dirLight);
 
-    const dracoLoader = new THREE.DRACOLoader();
-    dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+    // Draco decoder for compressed GLB
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath(
+      "https://www.gstatic.com/draco/versioned/decoders/1.5.7/"
+    );
 
-    const loader = new THREE.GLTFLoader();
+    // GLTF loader
+    const loader = new GLTFLoader();
     loader.setDRACOLoader(dracoLoader);
 
-    const gltf = await loadGltf(loader, modelUrl);
+    const gltf = await loadGltf(loader, "./assets/model.glb");
     const model = gltf.scene;
 
     model.scale.set(0.2, 0.2, 0.2);
@@ -83,7 +75,7 @@ const startAr = async () => {
     startButton.textContent = "Start AR";
     started = false;
     const reason = error && error.message ? error.message : String(error);
-    alert(`Failed to start AR.\n\nReason: ${reason}`);
+    alert("Failed to start AR.\n\nReason: " + reason);
   }
 };
 
