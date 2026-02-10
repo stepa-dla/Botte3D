@@ -33,21 +33,3 @@ canvas {
   color: #fff;
   font-size: 14px;
 }
-
-#controls {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
-  z-index: 30;
-}
-
-#startButton {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-family: "Chakra Petch", Arial, sans-serif;
-  font-weight: 600;
-  cursor: pointer;
-}
