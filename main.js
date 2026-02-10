@@ -65,10 +65,12 @@ async function startAR() {
     }
 
     const model = gltf.scene;
-    model.scale.set(1, 1, 1);
-    model.rotation.x = Math.PI / 2;
-    model.position.set(0, 0, 0);
-    anchor.group.add(model);
+    // Wrapper so scale/rotation apply reliably (MindAR may manage anchor.group)
+    const wrapper = new THREE.Group();
+    wrapper.scale.set(1, 1, 1);
+    wrapper.rotation.x = Math.PI / 2;
+    wrapper.add(model);
+    anchor.group.add(wrapper);
 
     loadingOverlay.classList.add("hidden");
 
