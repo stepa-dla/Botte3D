@@ -65,10 +65,8 @@ async function startAR() {
     }
 
     const model = gltf.scene;
-    // Wrapper so scale/rotation apply reliably (MindAR may manage anchor.group)
     const wrapper = new THREE.Group();
-    wrapper.scale.set(1, 1, 1);
-    wrapper.rotation.x = Math.PI / 2;
+    wrapper.scale.set(0.8, 0.8, 0.8);
     wrapper.add(model);
     anchor.group.add(wrapper);
 
